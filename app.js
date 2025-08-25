@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const authRoutes = require("./routes/authRoutes");
 
 const userRoutes = require("./routes/userRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
 
 const app = express();
 
@@ -26,6 +27,8 @@ app.use("/api/v1/auth", authRoutes);
 
 // user Router
 app.use("/api/v1/expenser/user", userRoutes);
+
+app.use("/api/v1/expenser/expenses", expenseRoutes);
 
 // Global error handler
 app.use(errorHandler);

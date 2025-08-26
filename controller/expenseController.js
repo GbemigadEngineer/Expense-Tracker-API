@@ -115,6 +115,22 @@ const createExpense = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get expense by ID
+
+const getExpense = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const expense = await Expense.findOne({ _id: id, user: req.user._id });
+  if (!expense) {
+    return next(new AppError("No expense found with that ID", 404));
+  }
+  res.status(200).json({
+    status: "success",
+    data: {
+      expense,
+    },
+  });
+});
+
 // Update expense
 const updateExpense = catchAsync(async (req, res, next) => {
   const { id } = req.params;
@@ -159,6 +175,7 @@ const deleteExpense = catchAsync(async (req, res, next) => {
 
 module.exports = {
   getExpenses,
+  getExpense,
   createExpense,
   updateExpense,
   deleteExpense,

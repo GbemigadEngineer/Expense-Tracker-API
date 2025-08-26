@@ -81,9 +81,112 @@ const login = catchAsync(async (req, res, next) => {
   });
 });
 
+// forgot password
+
+const forgotPassword = async (req, res) => {
+  // 1. Get user based on email in req.body
+
+  const user = await User.findOne({ email: req.body.email });
+  //2. Validate the email
+
+  if (!user) {
+    return res.status(404).json({
+      message: "No user found with that email!",
+    });
+  }
+
+  // 3. If validation passed Generate token, hash, and send the hashed token to the user
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+  console.log(resetToken);
+  console.log(user.passwordResetToken);
+  console.log("Token expires at:", new Date(user.passwordResetExpires));
+  // 4. Send token to user's email
+  const resetURL = `${req.protocol}://${req.get(
+    "host"
+  )}/api/v1/auth/resetPassword/${resetToken.trim()}`;
+
+  const message = `Forgot your password? Submit a PATCH request to: ${resetURL}`;
+
+  try {
+    await sendResetEmail({
+      email: user.email,
+      message,
+    });
+
+    res.status(200).json({ message: "Token sent to email" });
+  } catch (error) {
+    user.passwordResetToken = user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "There was an error sending the email" }, error);
+  }
+};
+
+// Reset Password
+
+const resetPassword = async (req, res) => {
+  try {
+    const resetToken = req.params.token.trim();
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    console.log(hashedToken);
+    //1. Find user by token + check expiry
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+    //2. Validate the user
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Token is invalid orr has expired" });
+    }
+
+    //3. If the validation is passed, set new password to the usr from the req.body
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+
+    // 4. Clear the rest token field back to their default
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+
+    await user.save();
+
+    // 5. Log the user in imediately i.e send new login token
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    // 6. SEND RESPONSE
+    res.status(200).json({
+      message: "Password reset successful",
+      token,
+    });
+  } catch (error) {
+    const message =
+      process.env.NODE_ENV === "production"
+        ? "An error occurred while resetting the password"
+        : error.message;
+
+    res.status(500).json({
+      status: "error",
+      message: message,
+    });
+  }
+};
+
 // export Controllers
 
 module.exports = {
   signup,
   login,
+  resetPassword,
+  forgotPassword,
 };

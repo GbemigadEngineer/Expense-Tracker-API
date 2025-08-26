@@ -11,6 +11,28 @@ A simple and efficient expense tracking API built with Node.js and MongoDB. Mana
 - **Category Support**: Predefined expense categories (Groceries, Leisure, Electronics, Utilities, Clothing, Health, Others)
 - **Secure Endpoints**: JWT-protected routes for authenticated operations
 
+## 📦 Dependencies
+
+json{
+"bcryptjs": "^3.0.2",
+"cookie-parser": "^1.4.7",
+"cors": "^2.8.5",
+"dotenv": "^17.2.1",
+"express": "^5.1.0",
+"jsonwebtoken": "^9.0.2",
+"mongoose": "^8.17.1"
+}
+
+Key Dependencies:
+
+bcryptjs: Password hashing and security
+cookie-parser: Parse and handle HTTP cookies
+cors: Cross-Origin Resource Sharing configuration
+dotenv: Environment variables management
+express: Web framework for Node.js
+jsonwebtoken: JWT token generation and verification
+mongoose: MongoDB object modeling
+
 ## 🛠 Tech Stack
 
 - **Runtime**: Node.js
@@ -153,7 +175,7 @@ Content-Type: application/json
 ### Create Expense
 
 ```http
-POST /api/expenses
+POST /api/v1/expenser/expenses
 Authorization: Bearer your_jwt_token_here
 Content-Type: application/json
 
@@ -171,10 +193,9 @@ Content-Type: application/json
 ## Filter with dates, currency, amount
 
 ```http
-GET /api/expenses?filter=past-week
-GET /api/expenses?filter=last-month
-GET /api/expenses?filter=last-3-months
-GET /api/expenses?filter=custom&startDate=2024-01-01&endDate=2024-01-31
+GET /expenses?period=week&value=2
+GET /expenses?period=month&value=1
+GET /expenses?currency="NGN"
 Authorization: Bearer your_jwt_token_here
 ```
 
@@ -192,21 +213,14 @@ The API supports the following predefined categories:
 
 ## 🔒 Authentication
 
-This API uses JWT (JSON Web Tokens) for authentication. After successful login, include the token in the Authorization header:
-
-```
-Authorization: Bearer your_jwt_token_here
-```
-
-Tokens are required for all expense operations and user profile management.
+This API uses JWT (JSON Web Tokens) for authentication. After successful login, the JWT token is automatically stored in HTTP cookies for secure authentication. The token is sent automatically with subsequent requests - no manual header configuration needed.
+Tokens are required for all expense operations and user profile management and are handled automatically by the browser.
 
 ## 🌐 Deployment
 
 The API is deployed on Railway. You can access the live version at:
 
-```
 https://expense-tracker-api-production-43d7.up.railway.app
-```
 
 ## 🧪 Testing
 
@@ -231,3 +245,7 @@ If you encounter any issues or have questions, please open an issue on GitHub or
 ---
 
 **Happy Expense Tracking! 💰**
+
+```
+
+```

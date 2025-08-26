@@ -1,6 +1,40 @@
 "use strict";
 
 const User = require("../model/userModel");
+const catchAsync = require("../utils/catchAsync");
+const AppError = require("../utils/AppError");
+
+// Get all user
+const getAllUser = catchAsync(async (req, res, next) => {
+  const user = await User.find();
+
+  res.status(200).json({
+    status: "success",
+    results: user.length,
+    data: {
+      user,
+    },
+  });
+});
+
+// Get user
+const getUser = catchAsync(async (req, res, next) => {
+  // 1. get user id from req.params
+  const userID = req.params.id;
+  // 2. Check if user exists and delete if he does
+  const user = await User.findById(userID);
+  // 3. If no user found, send error
+  if (!user) {
+    return next(new AppError("No user found with that ID", 404));
+  }
+  // 4. Send response
+  res.status(200).json({
+    status: "success",
+    data: {
+      user,
+    },
+  });
+});
 
 // Update user controller
 
@@ -17,6 +51,15 @@ const updateUser = async (req, res) => {
     const filteredBody = Object.fromEntries(
       Object.entries(req.body).filter(([key]) => allowedFields.includes(key))
     );
+
+    // 2b. Prevent password updates through this route
+    if (req.body.password || req.body.passwordConfirm) {
+      return res.status(400).json({
+        status: "fail",
+        message:
+          "This route is not for password updates. Please use /updateMyPassword.",
+      });
+    }
 
     // 3. Update the user in the database
     const updatedUser = await User.findByIdAndUpdate(userID, filteredBody, {
@@ -102,4 +145,6 @@ const deleteUser = async (req, res) => {
 module.exports = {
   updateUser,
   deleteUser,
+  getAllUser,
+  getUser,
 };
